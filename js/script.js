@@ -16,6 +16,40 @@ $(document).ready(function() {
     $(".error_block").removeClass("hide");
     return;
   }
+
+  function printContent(name, binaryContent) {
+    var $fileContent = $("<ul>");
+    try {
+      var $title = $("<h4>", {
+        text : name
+      });
+      $result.append($title);
+
+      var dateBefore = new Date();
+      // read the content of the file with JSZip
+      var zip = new JSZip(binaryContent);
+      var dateAfter = new Date();
+
+      $title.append($("<span>", {
+        text:" (parsed in " + (dateAfter - dateBefore) + "ms)"
+      }));
+      $(".check").removeClass("hide");
+
+      // that, or a good ol' for(var entryName in zip.files)
+      $.each(zip.files, function (index, zipEntry) {
+        $fileContent.append($("<li>", {
+          text : zipEntry.name
+        }));
+        // the content is here : zipEntry.asText()
+      });
+    } catch(e) {
+      $fileContent = $("<div>", {
+        "class" : "alert alert-danger",
+        text : "Error reading " + theFile.name + " : " + e.message
+      });
+    }
+    $result.append($fileContent);
+  }
   
   // Show contents
   var $result = $(".result");
@@ -35,38 +69,7 @@ $(document).ready(function() {
       // Closure to capture the file information.
       reader.onload = (function(theFile) {
         return function(e) {
-          var $title = $("<h4>", {
-            text : theFile.name
-          });
-          $result.append($title);
-          var $fileContent = $("<ul>");
-          try {
-
-            var dateBefore = new Date();
-            // read the content of the file with JSZip
-            var zip = new JSZip(e.target.result);
-            var dateAfter = new Date();
-
-            $title.append($("<span>", {
-              text:" (parsed in " + (dateAfter - dateBefore) + "ms)"
-            }));
-            $(".check").removeClass("hide");
-
-            // that, or a good ol' for(var entryName in zip.files)
-            $.each(zip.files, function (index, zipEntry) {
-              $fileContent.append($("<li>", {
-                text : zipEntry.name
-              }));
-              // the content is here : zipEntry.asText()
-            });
-            // end of the magic !
-          } catch(e) {
-            $fileContent = $("<div>", {
-              "class" : "alert alert-danger",
-              text : "Error reading " + theFile.name + " : " + e.message
-            });
-          }
-          $result.append($fileContent);
+          printContent(theFile.name, e.target.result);
           
           // Download as Linux App
           $(".export-as-lin-app").on("click", function() {
